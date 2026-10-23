@@ -21,6 +21,8 @@ export default defineConfig({
     },
     {
       name: 'e2e-chromium',
+      // TC-029 在 API 与 E2E 中共用 owner-revoke 并改其状态，必须串行
+      dependencies: ['api'],
       testDir: './tests/e2e',
       use: { ...devices['Desktop Chrome'], baseURL: WEB_URL, screenshot: 'only-on-failure', video: 'retain-on-failure' },
     },
