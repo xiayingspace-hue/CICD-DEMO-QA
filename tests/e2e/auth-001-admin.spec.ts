@@ -10,9 +10,6 @@ const MSG_CRED = '账号或密码错误';
 const MSG_DISABLED = '账号已停用，请联系 CSO';
 const MSG_NETWORK = '网络异常，请稍后重试';
 
-// 前端落地页路径与 ROLES.md 不一致，已在 CONTEXT#6 报告；修复前涉及跳转断言的用例 fixme，不改脚本迁就代码。
-const HOME_PATH_ISSUE = 'CONTEXT#6：登录后跳转路径与 ROLES.md 不一致';
-
 const t = (page: Page, id: string) => page.getByTestId(id);
 
 async function openLogin(page: Page) {
@@ -92,7 +89,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-006 账号首尾空格自动去除，请求中 account 为 owner01，登录成功', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     const reqs = trackLogin(page);
     await openLogin(page);
     await fillAndSubmit(page, ` ${accounts.owner.account} `, accounts.owner.password);
@@ -118,7 +114,6 @@ test.describe('REQ-001 登录页', () => {
     ['TC-010', 'sub', '/sub/home'],
   ] as const) {
     test(`TC-${tc.slice(3)} ${accounts[key].account} 登录后跳转 ${path}`, async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
       await openLogin(page);
       await fillAndSubmit(page, accounts[key].account, accounts[key].password);
       await expect(page).toHaveURL(new RegExp(`${path}$`));
@@ -153,7 +148,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-014 提交中按钮禁用并加载，连点只发 1 次请求', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     await page.route(LOGIN_API, async (route) => {
       await new Promise((r) => setTimeout(r, 3000));
       await route.continue();
@@ -171,7 +165,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-015 接口 5xx：提示网络异常，输入保留，恢复后可成功', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     await page.route(LOGIN_API, (route) => route.fulfill({ status: 500, body: 'boom' }));
     await openLogin(page);
     await fillAndSubmit(page, accounts.owner.account, accounts.owner.password);
@@ -220,7 +213,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-019 账号框回车等同点登录', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     await openLogin(page);
     await t(page, 'password').fill(accounts.owner.password);
     await t(page, 'account').fill(accounts.owner.account);
@@ -229,7 +221,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-020 密码框回车等同点登录', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     await openLogin(page);
     await t(page, 'account').fill(accounts.owner.account);
     await t(page, 'password').fill(accounts.owner.password);
@@ -238,7 +229,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-021 已登录访问登录页：确认期间不展示表单，随后跳转屋主首页', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     const token = await tokenFor(page, accounts.owner);
     await page.addInitScript((tk) => localStorage.setItem('token', tk), token);
     await page.route(ME_API, async (route) => {
@@ -281,7 +271,6 @@ test.describe('REQ-001 登录页', () => {
   });
 
   test('TC-023 DLP 已到期的屋主可登录并跳转屋主首页', async ({ page }) => {
-    test.fixme(true, HOME_PATH_ISSUE);
     await openLogin(page);
     await fillAndSubmit(page, accounts.expired.account, accounts.expired.password);
     await expect(page).toHaveURL(/\/owner\/home$/);
