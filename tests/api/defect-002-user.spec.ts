@@ -4,7 +4,8 @@ import {
   putDefect, submitDefect, tokenOf, uploadPng, uploadRaw, validDefect, withdrawDefect,
 } from '../support/defect';
 import {
-  clockControlReady, clockControlSkipReason, defectHelpersReady, defectHelpersSkipReason, setDefectStatus, setDlpEndDate, sgToday,
+  clockSkipReason, defectHelpersReady, defectHelpersSkipReason, findSeedDefectId, prevDay, serverSgParts, setDefectStatus,
+  setDlpEndDate,
 } from '../support/db';
 
 // 来源：QA-defect-002-user / API-defect-002-user（CICD-DEMO-CONTEXT，feat/req-002-submit-defect）。预期只取自文档。
@@ -112,17 +113,17 @@ test.describe('REQ-002 屋主提交缺陷接口', () => {
   });
 
   test('TC-036 DLP 截止日 23:59:59（新加坡时间）仍可提交', async ({ request }) => {
-    test.skip(!clockControlReady || !defectHelpersReady, clockControlSkipReason);
-    await setDlpEndDate(accounts.lastday.account, sgToday());
-    // 把服务端时间设为 sgToday() 23:59:59+08:00 后：
+    const sg = serverSgParts();
+    test.skip(!sg || sg.time !== '23:59:59' || !defectHelpersReady, clockSkipReason('23:59:59（并配置 DB_HOST）'));
+    await setDlpEndDate(accounts.lastday.account, sg!.date);
     const token = await tokenOf(request, accounts.lastday);
     await createDefect(request, token);
   });
 
   test('TC-037 截止日次日 00:00:00（新加坡时间）起拒绝提交', async ({ request }) => {
-    test.skip(!clockControlReady || !defectHelpersReady, clockControlSkipReason);
-    await setDlpEndDate(accounts.lastday.account, sgToday());
-    // 把服务端时间设为截止日次日 00:00:00+08:00 后：
+    const sg = serverSgParts();
+    test.skip(!sg || sg.time !== '00:00:00' || !defectHelpersReady, clockSkipReason('00:00:00（并配置 DB_HOST）'));
+    await setDlpEndDate(accounts.lastday.account, prevDay(sg!.date));
     const token = await tokenOf(request, accounts.lastday);
     await expectCode(await submitDefect(request, token, validDefect), 403, 'DEFECT_DLP_EXPIRED');
     const ctx = await request.get('owner/submit-context', { headers: bearer(token) });
@@ -164,8 +165,9 @@ test.describe('REQ-002 屋主提交缺陷接口', () => {
   });
 
   test('TC-085 DLP 已到期：上传新图片并修改待派单缺陷成功', async ({ request }) => {
-    const id = process.env.EXPIRED_DEFECT_ID;
-    test.skip(!id, '未配置 EXPIRED_DEFECT_ID：接口没有列表，无法发现 owner-expired 种子缺陷的 defectId');
+    test.skip(!defectHelpersReady, defectHelpersSkipReason);
+    const id = await findSeedDefectId(accounts.expired.account);
+    expect(id, 'dev 种子应为 owner-expired 预置一条待派单缺陷').toBeTruthy();
     const token = await tokenOf(request, accounts.expired);
     const before = await (await getDefect(request, token, id!)).json();
     expect(before.status).toBe('PENDING_DISPATCH');
@@ -250,8 +252,8 @@ test.describe('REQ-002 屋主提交缺陷接口', () => {
     }
   });
 
-  test('TC-070 图片签名地址超过 10 分钟返回 403', async () => {
-    test.skip(!clockControlReady, clockControlSkipReason);
+  test.skip('TC-070 图片签名地址超过 10 分钟返回 403', async () => {
+    // 后端时钟只能在启动时固定，运行中无法推进 10 分钟；签名过期由后端单元测试覆盖，此处不自动化。
   });
 
   test('TC-077 未绑定单元：submit-context 与提交均返回 403 DEFECT_NO_UNIT', async ({ request }) => {
