@@ -61,3 +61,11 @@ export const clockSkipReason = (want: string) =>
 export const sgToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Singapore' }).format(new Date());
 /** 前一天（给定 YYYY-MM-DD） */
 export const prevDay = (d: string) => new Date(new Date(`${d}T00:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10);
+
+/** REQ-003 TC-062：owner-page-rw 初始 21 条全部为待派单；开跑前统一恢复（仅该专用账号） */
+export const resetPageRwStatuses = () =>
+  withConn((c) =>
+    c.execute(
+      "UPDATE defect SET status = 'PENDING_DISPATCH' WHERE owner_account_id = (SELECT id FROM account WHERE account = 'owner-page-rw')",
+    ),
+  );
