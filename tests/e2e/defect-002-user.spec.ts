@@ -196,7 +196,6 @@ test.describe('REQ-002 提交缺陷页', () => {
   });
 
   test('TC-015 已上传 5 张后再选 1 张：提示「最多上传 5 张图片」，不加入', async ({ page, api }) => {
-    test.fixme(true, 'CONTEXT#9：满 5 张后前端隐藏了添加入口，无法触发 AC-004 要求的提示；待 PM 结论');
     await loginAs(page, api, accounts.owner);
     await openNew(page);
     await addImages(page, Array.from({ length: 5 }, (_, i) => png(`p${i}.png`)));

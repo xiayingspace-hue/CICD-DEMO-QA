@@ -172,7 +172,8 @@ test.describe('REQ-002 屋主提交缺陷接口', () => {
     const before = await (await getDefect(request, token, id!)).json();
     expect(before.status).toBe('PENDING_DISPATCH');
     const img = await uploadPng(request, token);
-    const keep = (before.images as { imageId: string }[]).map((i) => i.imageId);
+    // 种子缺陷会在多次运行中累积图片，最多保留 4 张已有的，保证加上新图不超过 5 张
+    const keep = (before.images as { imageId: string }[]).map((i) => i.imageId).slice(0, 4);
     const res = await putDefect(request, token, id!, {
       location: before.location, category: before.category, description: before.description,
       imageIds: [...keep, img.imageId],
