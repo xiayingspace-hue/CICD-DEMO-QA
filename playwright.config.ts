@@ -3,7 +3,7 @@ import 'dotenv/config';
 
 // 结尾补 /，相对路径（如 'auth/login'）才会拼在服务前缀 /defect-service 之后
 const API_URL = (process.env.API_BASE_URL ?? 'http://localhost:8080/defect-service').replace(/\/?$/, '/');
-const WEB_URL = process.env.WEB_BASE_URL ?? 'https://playwright.dev';
+const WEB_URL = process.env.WEB_BASE_URL ?? 'http://localhost:5173';
 
 export default defineConfig({
   testDir: './tests',
